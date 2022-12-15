@@ -1,0 +1,8 @@
+newrelic:
+  logLevel: ""
+  licenseKey: ""
+
+endpoints:
+  - type: "kvp"
+    name: "my_endpoint"
+    url: "http://endpoint.svc.cluster.local:80/metrics"

@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "scraper.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "scraper.labels" . | nindent 4 }}
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+          {{- with .Values.podAnnotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        spec:
+          serviceAccountName: {{ include "scraper.fullname" . }}
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              volumeMounts:
+                - name: config
+                  mountPath: /etc/config
+          restartPolicy: {{ .Values.restartPolicy }}
+          volumes:
+            - name: config
+              configMap:
+                name: config
+                optional: false
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 14 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 14 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 14 }}
+          {{- end }}

@@ -7,6 +7,6 @@ metadata:
     {{- include "scraper.labels" . | nindent 4 }}
 data:
   {{- with .Values.config.data }}
-  config:
+  config.yaml: |
   {{- toYaml . | nindent 4 }}
   {{- end }}

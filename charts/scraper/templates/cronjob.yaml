@@ -20,14 +20,17 @@ spec:
             - name: {{ .Chart.Name }}
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
+              env:
+                - name: CONFIG_PATH
+                  value: "{{ .Values.config.mountPath }}/config.yaml"
               volumeMounts:
                 - name: config
-                  mountPath: /etc/config
+                  mountPath: {{ .Values.config.mountPath }}
           restartPolicy: {{ .Values.restartPolicy }}
           volumes:
             - name: config
               configMap:
-                name: config
+                name: {{ include "scraper.fullname" . }}
                 optional: false
           {{- with .Values.nodeSelector }}
           nodeSelector:

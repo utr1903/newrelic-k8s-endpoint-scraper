@@ -7,6 +7,8 @@ metadata:
     {{- include "scraper.labels" . | nindent 4 }}
 spec:
   schedule: "* * * * *"
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit }}
   jobTemplate:
     spec:
       template:

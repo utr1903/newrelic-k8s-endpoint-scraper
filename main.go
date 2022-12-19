@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
-	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/scraper"
+	scraper "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/scrape"
 )
 
 func main() {

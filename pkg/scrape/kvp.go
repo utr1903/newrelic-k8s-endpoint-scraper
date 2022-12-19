@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -27,11 +26,6 @@ func (p *KvpParser) Run(
 		value := strings.TrimSpace(entries[1])
 
 		values[key] = value
-	}
-
-	for k, v := range values {
-		fmt.Println("Key: " + k)
-		fmt.Println("Val: " + v)
 	}
 
 	return values

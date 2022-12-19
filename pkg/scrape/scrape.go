@@ -9,12 +9,22 @@ import (
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
 )
 
-type EndpointScraper struct {
-	config *config.Config
-	client *http.Client
+// Object to store all values of all endpoints
+type EndpointValues struct {
+	// To avoid multi-thread read/write into the map
+	mux *sync.RWMutex
 
-	mux            *sync.RWMutex
-	EndpointValues map[config.Endpoint](map[string]string)
+	// Map to store all values according to endpoints
+	// -> Key: endpoint itself
+	// -> Val: attributes which the endpoint has exposed
+	Values map[config.Endpoint](map[string]string)
+}
+
+// Object which is responsible for scraping
+type EndpointScraper struct {
+	config         *config.Config
+	client         *http.Client
+	EndpointValues EndpointValues
 }
 
 // Creates new scraper for endpoints
@@ -25,11 +35,15 @@ func New(
 	// Create HTTP client
 	client := http.Client{Timeout: time.Duration(30 * time.Second)}
 
+	evs := EndpointValues{
+		mux:    &sync.RWMutex{},
+		Values: make(map[config.Endpoint](map[string]string)),
+	}
+
 	return &EndpointScraper{
 		config:         cfg,
 		client:         &client,
-		mux:            &sync.RWMutex{},
-		EndpointValues: make(map[config.Endpoint](map[string]string)),
+		EndpointValues: evs,
 	}
 }
 
@@ -71,26 +85,23 @@ func (s *EndpointScraper) parse(
 	endpoint config.Endpoint,
 	data []byte,
 ) {
-
-	s.mux.Lock()
 	s.addEndpointValues(endpoint, p.Run(data))
-	s.mux.Unlock()
 }
 
 func (s *EndpointScraper) addEndpointValues(
 	endpoint config.Endpoint,
 	values map[string]string,
 ) {
-	s.mux.Lock()
-	s.EndpointValues[endpoint] = values
-	s.mux.Unlock()
+	s.EndpointValues.mux.Lock()
+	s.EndpointValues.Values[endpoint] = values
+	s.EndpointValues.mux.Unlock()
 }
 
 func (s *EndpointScraper) getEndpointValues(
 	endpoint config.Endpoint,
 ) map[string]string {
-	s.mux.RLock()
-	values := s.EndpointValues[endpoint]
-	s.mux.RUnlock()
+	s.EndpointValues.mux.RLock()
+	values := s.EndpointValues.Values[endpoint]
+	s.EndpointValues.mux.RUnlock()
 	return values
 }

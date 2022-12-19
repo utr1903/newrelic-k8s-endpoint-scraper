@@ -23,6 +23,9 @@ if [[ $arm == "true" ]]; then
     --namespace "newrelic" \
     --set image.repository="uturkarslan/newrelic-kubernetes-endpoint-scraper-arm" \
     --set image.tag="1.0.0" \
+    --set config.data.endpoints[0].type="kvp" \
+    --set config.data.endpoints[0].name="test" \
+    --set config.data.endpoints[0].url="http://server.test.svc.cluster.local:8080/kvp" \
     "../charts/scraper"
 
 # AMD deployment
@@ -35,5 +38,8 @@ helm upgrade "scraper" \
   --namespace "newrelic" \
   --set image.repository="uturkarslan/newrelic-kubernetes-endpoint-scraper-amd" \
   --set image.tag="1.0.0" \
+  --set config.data.endpoints[0].type="kvp" \
+  --set config.data.endpoints[0].name="test" \
+  --set config.data.endpoints[0].url="http://server.test.svc.cluster.local:8080/kvp" \
   "../charts/scraper"
 fi

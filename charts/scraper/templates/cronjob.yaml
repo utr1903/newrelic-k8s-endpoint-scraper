@@ -23,6 +23,8 @@ spec:
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               env:
+                - name: NEW_RELIC_ACCOUNT_ID
+                  value:  "{{ .Values.config.data.newrelic.accountId }}"
                 - name: NEW_RELIC_LICENSE_KEY
                   valueFrom:
                     secretKeyRef:

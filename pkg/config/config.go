@@ -20,7 +20,7 @@ type Config struct {
 	Endpoints []Endpoint `yaml:"endpoints"`
 }
 
-func New() (
+func NewConfig() (
 	*Config,
 	error,
 ) {

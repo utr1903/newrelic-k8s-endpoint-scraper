@@ -26,6 +26,7 @@ if [[ $arm == "true" ]]; then
     --set config.data.endpoints[0].type="kvp" \
     --set config.data.endpoints[0].name="test" \
     --set config.data.endpoints[0].url="http://server.test.svc.cluster.local:8080/kvp" \
+    --set config.data.newrelic.logLevel="DEBUG" \
     --set config.data.newrelic.accountId=$NEWRELIC_ACCOUNT_ID \
     --set config.data.newrelic.licenseKey=$NEWRELIC_LICENSE_KEY \
     "../charts/scraper"
@@ -43,6 +44,7 @@ helm upgrade "scraper" \
   --set config.data.endpoints[0].type="kvp" \
   --set config.data.endpoints[0].name="test" \
   --set config.data.endpoints[0].url="http://server.test.svc.cluster.local:8080/kvp" \
+  --set config.data.newrelic.logLevel="DEBUG" \
   --set config.data.newrelic.accountId=$NEWRELIC_ACCOUNT_ID \
   --set config.data.newrelic.licenseKey=$NEWRELIC_LICENSE_KEY \
   "../charts/scraper"

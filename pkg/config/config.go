@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -20,6 +21,7 @@ type Config struct {
 		LicenseKey     string
 	} `yaml:"newrelic"`
 	Endpoints []Endpoint `yaml:"endpoints"`
+	Logger    *Logger
 }
 
 func NewConfig() *Config {
@@ -27,10 +29,14 @@ func NewConfig() *Config {
 	// Parse config file
 	cfg := parseConfigFile()
 
+	// Create logger
+	cfg.Logger = NewLogger(cfg.Newrelic.LogLevel)
+
 	// Parse New Relic license key
 	cfg.Newrelic.LicenseKey = parseNewRelicLicenseKey()
 	cfg.Newrelic.EventsEndpoint = setNewRelicEventsEndpoint(cfg.Newrelic.LicenseKey)
 
+	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
 	return &cfg
 }
 

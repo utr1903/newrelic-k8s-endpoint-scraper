@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
 )
 
@@ -25,6 +26,8 @@ func NewScraper(
 
 	evs := config.NewEndpointValues()
 
+	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
+
 	return &EndpointScraper{
 		config: cfg,
 		client: &client,
@@ -36,17 +39,39 @@ func NewScraper(
 func (s *EndpointScraper) Run() {
 
 	// Loop & scrape all endpoints
+	s.config.Logger.Log(logrus.DebugLevel, "Looping over the endpoints to scrape...")
 	for _, endpoint := range s.config.Endpoints {
+
+		s.config.Logger.LogWithFields(logrus.DebugLevel, "Scraping endpoint...",
+			map[string]string{
+				"endpointType": endpoint.Type,
+				"endpointName": endpoint.Name,
+				"endpointUrl":  endpoint.URL,
+			})
 
 		// Create HTTP request
 		req, err := http.NewRequest(http.MethodGet, endpoint.URL, nil)
 		if err != nil {
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+				map[string]string{
+					"endpointType": endpoint.Type,
+					"endpointName": endpoint.Name,
+					"endpointUrl":  endpoint.URL,
+					"error":        err.Error(),
+				})
 			return
 		}
 
 		// Perform HTTP request
 		res, err := s.client.Do(req)
 		if err != nil {
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+				map[string]string{
+					"endpointType": endpoint.Type,
+					"endpointName": endpoint.Name,
+					"endpointUrl":  endpoint.URL,
+					"error":        err.Error(),
+				})
 			return
 		}
 		defer res.Body.Close()
@@ -54,6 +79,13 @@ func (s *EndpointScraper) Run() {
 		// Extract response body
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, "Response body could not be parsed.",
+				map[string]string{
+					"endpointType": endpoint.Type,
+					"endpointName": endpoint.Name,
+					"endpointUrl":  endpoint.URL,
+					"error":        err.Error(),
+				})
 			return
 		}
 
@@ -71,6 +103,13 @@ func (s *EndpointScraper) parse(
 	data []byte,
 ) {
 	s.evs.AddEndpointValues(endpoint, p.Run(data))
+
+	s.config.Logger.LogWithFields(logrus.DebugLevel, "Endpoint values are parsed.",
+		map[string]string{
+			"endpointType": endpoint.Type,
+			"endpointName": endpoint.Name,
+			"endpointUrl":  endpoint.URL,
+		})
 }
 
 func (s *EndpointScraper) GetEndpointValues() *config.EndpointValues {

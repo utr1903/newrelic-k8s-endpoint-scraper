@@ -67,6 +67,10 @@ config:
   # Configuration data itself
   data:
     newrelic:
+      # New Relic account ID
+      accountId: ""
+      # New Relic license key
+      licenseKey: ""
       # Log level can be: INFO, WARN, ERR
       logLevel: ERR
     # Endpoints which are to be scraped

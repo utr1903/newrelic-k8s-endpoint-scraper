@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -14,6 +15,15 @@ type EndpointScraper struct {
 	config *config.Config
 	client *http.Client
 	evs    *config.EndpointValues
+}
+
+var readResponseBody = func(
+	body io.ReadCloser,
+) (
+	[]byte,
+	error,
+) {
+	return ioutil.ReadAll(body)
 }
 
 // Creates new scraper for endpoints
@@ -76,8 +86,19 @@ func (s *EndpointScraper) Run() {
 		}
 		defer res.Body.Close()
 
+		// Check if call was successful
+		if res.StatusCode != http.StatusOK {
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request has returned not OK status.",
+				map[string]string{
+					"endpointType": endpoint.Type,
+					"endpointName": endpoint.Name,
+					"endpointUrl":  endpoint.URL,
+				})
+			return
+		}
+
 		// Extract response body
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := readResponseBody(res.Body)
 		if err != nil {
 			s.config.Logger.LogWithFields(logrus.ErrorLevel, "Response body could not be parsed.",
 				map[string]string{

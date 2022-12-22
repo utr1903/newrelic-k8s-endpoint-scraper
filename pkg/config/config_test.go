@@ -218,7 +218,7 @@ func Test_EndpointNameIsNotDefined(t *testing.T) {
 			Logger: nil,
 			Endpoints: []Endpoint{
 				{
-					Type: "Type",
+					Type: "kvp",
 					URL:  "URL",
 				},
 			},
@@ -260,8 +260,51 @@ func Test_EndpointUrlIsNotDefined(t *testing.T) {
 			Logger: nil,
 			Endpoints: []Endpoint{
 				{
-					Type: "Type",
+					Type: "kvp",
 					Name: "Name",
+				},
+			},
+		}
+
+		bytes, err := yaml.Marshal(cfg)
+		if err != nil {
+			t.Log(err)
+		}
+
+		return bytes, nil
+	}
+
+	assert.Panics(t, func() { parseConfigFile() })
+}
+
+func Test_EndpointTypeIsNotSupported(t *testing.T) {
+	getEnvMock := getEnv
+	defer func() {
+		getEnv = getEnvMock
+	}()
+
+	getEnv = func(string) string {
+		return "CONFIG_PATH"
+	}
+
+	readFileMock := readFile
+	defer func() {
+		readFile = readFileMock
+	}()
+
+	readFile = func(string) ([]byte, error) {
+		cfg := &Config{
+			Newrelic: &NewRelicInput{
+				LogLevel:       "ERROR",
+				EventsEndpoint: "",
+				LicenseKey:     "",
+			},
+			Logger: nil,
+			Endpoints: []Endpoint{
+				{
+					Type: "yaml",
+					Name: "Name",
+					URL:  "URL",
 				},
 			},
 		}
@@ -302,7 +345,7 @@ func Test_ConfigFileIsValid(t *testing.T) {
 			Logger: nil,
 			Endpoints: []Endpoint{
 				{
-					Type: "Type",
+					Type: "kvp",
 					Name: "Name",
 					URL:  "URL",
 				},

@@ -133,5 +133,11 @@ func checkEndpoints(
 			cfg.Logger.Log(logrus.ErrorLevel, msg)
 			panic(msg)
 		}
+
+		if endpoint.Type != "kvp" {
+			msg := "Only the following types are supported: kvp!"
+			cfg.Logger.Log(logrus.ErrorLevel, msg)
+			panic(msg)
+		}
 	}
 }

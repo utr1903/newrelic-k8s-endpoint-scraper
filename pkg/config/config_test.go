@@ -360,5 +360,5 @@ func Test_ConfigFileIsValid(t *testing.T) {
 		return bytes, nil
 	}
 
-	assert.NotPanics(t, func() { parseConfigFile() })
+	assert.NotPanics(t, func() { NewConfig() })
 }

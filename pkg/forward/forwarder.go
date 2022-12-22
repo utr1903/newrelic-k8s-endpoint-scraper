@@ -3,6 +3,8 @@ package forward
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -18,7 +20,16 @@ type Forwarder struct {
 	evs    *config.EndpointValues
 }
 
-func New(
+var readResponseBody = func(
+	body io.ReadCloser,
+) (
+	[]byte,
+	error,
+) {
+	return ioutil.ReadAll(body)
+}
+
+func NewForwarder(
 	cfg *config.Config,
 	evs *config.EndpointValues,
 ) *Forwarder {
@@ -106,13 +117,31 @@ func (f *Forwarder) sendToNewRelic(
 	f.config.Logger.Log(logrus.DebugLevel, "Performing HTTP request...")
 	res, err := f.client.Do(req)
 	if err != nil {
-		f.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request has failed.",
+		msg := "HTTP request has failed."
+		f.config.Logger.LogWithFields(logrus.ErrorLevel, msg,
 			map[string]string{
 				"error": err.Error(),
 			})
-		return
+		panic(msg)
 	}
 	defer res.Body.Close()
 
-	f.config.Logger.Log(logrus.DebugLevel, "New Relic events are forwarded successfully.")
+	// Check if call was successful
+	if res.StatusCode == http.StatusOK {
+		f.config.Logger.Log(logrus.DebugLevel, "New Relic events are forwarded successfully.")
+	} else {
+		msg := "HTTP request has returned not OK status."
+		f.config.Logger.Log(logrus.ErrorLevel, msg)
+		panic(msg)
+	}
+
+	// // Extract response body
+	// body, err := readResponseBody(res.Body)
+	// if err != nil {
+	// 	f.config.Logger.LogWithFields(logrus.ErrorLevel, "Response body could not be parsed.",
+	// 		map[string]string{
+	// 			"error": err.Error(),
+	// 		})
+	// 	return
+	// }
 }

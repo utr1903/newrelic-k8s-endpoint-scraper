@@ -16,6 +16,6 @@ func main() {
 	scraper.Run()
 
 	// Forward endpoint values
-	forwarder := forwarder.New(config, scraper.GetEndpointValues())
+	forwarder := forwarder.NewForwarder(config, scraper.GetEndpointValues())
 	forwarder.Run()
 }

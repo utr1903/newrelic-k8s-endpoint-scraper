@@ -3,8 +3,6 @@ package forward
 import (
 	"bytes"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -18,15 +16,6 @@ type Forwarder struct {
 	config *config.Config
 	client *http.Client
 	evs    *config.EndpointValues
-}
-
-var readResponseBody = func(
-	body io.ReadCloser,
-) (
-	[]byte,
-	error,
-) {
-	return ioutil.ReadAll(body)
 }
 
 func NewForwarder(
@@ -134,14 +123,4 @@ func (f *Forwarder) sendToNewRelic(
 		f.config.Logger.Log(logrus.ErrorLevel, msg)
 		panic(msg)
 	}
-
-	// // Extract response body
-	// body, err := readResponseBody(res.Body)
-	// if err != nil {
-	// 	f.config.Logger.LogWithFields(logrus.ErrorLevel, "Response body could not be parsed.",
-	// 		map[string]string{
-	// 			"error": err.Error(),
-	// 		})
-	// 	return
-	// }
 }

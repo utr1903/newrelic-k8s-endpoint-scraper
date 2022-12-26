@@ -78,7 +78,7 @@ func createConfig(
 ) *config.Config {
 	logLevel := "ERROR"
 	eps := []config.Endpoint{}
-	for url, _ := range endpointInfo {
+	for url := range endpointInfo {
 		eps = append(eps, config.Endpoint{
 			Type: "kvp",
 			Name: "my_endpoint_" + url,

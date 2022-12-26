@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 // Object which is responsible for scraping
@@ -62,7 +63,7 @@ func (s *EndpointScraper) Run() *config.EndpointValues {
 		// Create HTTP request
 		req, err := http.NewRequest(http.MethodGet, endpoint.URL, nil)
 		if err != nil {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__HTTP_REQUEST_COULD_NOT_BE_CREATED,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
@@ -75,7 +76,7 @@ func (s *EndpointScraper) Run() *config.EndpointValues {
 		// Perform HTTP request
 		res, err := s.client.Do(req)
 		if err != nil {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__HTTP_REQUEST_HAS_FAILED,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
@@ -88,7 +89,7 @@ func (s *EndpointScraper) Run() *config.EndpointValues {
 
 		// Check if call was successful
 		if res.StatusCode != http.StatusOK {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request has returned not OK status.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__ENDPOINT_RETURNED_NOT_OK_STATUS,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
@@ -100,7 +101,7 @@ func (s *EndpointScraper) Run() *config.EndpointValues {
 		// Extract response body
 		body, err := readResponseBody(res.Body)
 		if err != nil {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "Response body could not be parsed.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__RESPONSE_BODY_COULD_NOT_BE_PARSED,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,

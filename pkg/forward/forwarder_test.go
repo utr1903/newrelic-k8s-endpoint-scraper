@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 func Test_HttpRequestCouldNotBeCreated(t *testing.T) {
@@ -18,7 +19,7 @@ func Test_HttpRequestCouldNotBeCreated(t *testing.T) {
 	err := forwarder.Run()
 
 	assert.NotNil(t, err)
-	assert.Equal(t, config.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED, err.Error())
+	assert.Equal(t, logging.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED, err.Error())
 }
 
 func Test_HttpRequestHasFailed(t *testing.T) {
@@ -30,7 +31,7 @@ func Test_HttpRequestHasFailed(t *testing.T) {
 	err := forwarder.Run()
 
 	assert.NotNil(t, err)
-	assert.Equal(t, config.FORWARD__HTTP_REQUEST_HAS_FAILED, err.Error())
+	assert.Equal(t, logging.FORWARD__HTTP_REQUEST_HAS_FAILED, err.Error())
 }
 
 func Test_NewRelicReturnsNotOkResponse(t *testing.T) {
@@ -48,7 +49,7 @@ func Test_NewRelicReturnsNotOkResponse(t *testing.T) {
 	err := forwarder.Run()
 
 	assert.NotNil(t, err)
-	assert.Equal(t, config.FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS, err.Error())
+	assert.Equal(t, logging.FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS, err.Error())
 }
 
 func Test_EventsAreSent(t *testing.T) {
@@ -110,7 +111,7 @@ func createConfig(
 			EventsEndpoint: newrelicEventsUrl,
 			LicenseKey:     "",
 		},
-		Logger:    config.NewLogger(logLevel),
+		Logger:    logging.NewLogger(logLevel),
 		Endpoints: eps,
 	}
 }

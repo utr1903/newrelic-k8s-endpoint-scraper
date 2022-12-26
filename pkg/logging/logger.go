@@ -17,6 +17,12 @@ const (
 	CONFIG__ENDPOINT_INFO_IS_MISSING                  = "check your endpoint definitions! type, name and url must be defined"
 	CONFIG__ENDPOINT_TYPE_IS_NOT_SUPPORTED            = "only the following types are supported: kvp"
 
+	// scrape
+	SCRAPE__HTTP_REQUEST_COULD_NOT_BE_CREATED = "http request could not be created"
+	SCRAPE__HTTP_REQUEST_HAS_FAILED           = "http request has failed"
+	SCRAPE__ENDPOINT_RETURNED_NOT_OK_STATUS   = "http request has returned not OK status"
+	SCRAPE__RESPONSE_BODY_COULD_NOT_BE_PARSED = "response body could not be parsed"
+
 	// forward
 	FORWARD__PAYLOAD_COULD_NOT_BE_CREATED      = "payload could not be created"
 	FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED = "http request could not be created"

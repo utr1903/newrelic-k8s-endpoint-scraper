@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 	"gopkg.in/yaml.v2"
 )
 
@@ -20,7 +21,7 @@ func Test_NewRelicLicenseKeyIsNotDefined(t *testing.T) {
 	licenseKey, err := parseNewRelicLicenseKey()
 	assert.Equal(t, "", licenseKey)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__LICENSE_KEY_IS_NOT_PROVIDED, err.Error())
+	assert.Equal(t, logging.CONFIG__LICENSE_KEY_IS_NOT_PROVIDED, err.Error())
 }
 
 func Test_NewRelicLicenseKeyIsDefined(t *testing.T) {
@@ -54,7 +55,7 @@ func Test_NewRelicAccountIdIsNotDefined(t *testing.T) {
 	eventsEndpoint, err := setNewRelicEventsEndpoint(licenseKey)
 	assert.Equal(t, "", eventsEndpoint)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__ACCOUNT_ID_IS_NOT_PROVIDED, err.Error())
+	assert.Equal(t, logging.CONFIG__ACCOUNT_ID_IS_NOT_PROVIDED, err.Error())
 }
 
 func Test_NewRelicEndpointIsEu(t *testing.T) {
@@ -110,7 +111,7 @@ func Test_ConfigFilePathIsNotDefined(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__CONFIG_PATH_IS_NOT_DEFINED, err.Error())
+	assert.Equal(t, logging.CONFIG__CONFIG_PATH_IS_NOT_DEFINED, err.Error())
 }
 
 func Test_ConfigFileIsNotDefined(t *testing.T) {
@@ -126,7 +127,7 @@ func Test_ConfigFileIsNotDefined(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__CONFIG_FILE_COULD_NOT_BE_READ, err.Error())
+	assert.Equal(t, logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_READ, err.Error())
 }
 
 func Test_ConfigFileHasInvalidYamlFormat(t *testing.T) {
@@ -151,7 +152,7 @@ func Test_ConfigFileHasInvalidYamlFormat(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML, err.Error())
+	assert.Equal(t, logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML, err.Error())
 }
 
 func Test_NoEndpointIsDefined(t *testing.T) {
@@ -190,7 +191,7 @@ func Test_NoEndpointIsDefined(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__NO_ENDPOINT_IS_DEFINED, err.Error())
+	assert.Equal(t, logging.CONFIG__NO_ENDPOINT_IS_DEFINED, err.Error())
 }
 
 func Test_EndpointTypeIsNotDefined(t *testing.T) {
@@ -235,7 +236,7 @@ func Test_EndpointTypeIsNotDefined(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
+	assert.Equal(t, logging.CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
 }
 
 func Test_EndpointNameIsNotDefined(t *testing.T) {
@@ -280,7 +281,7 @@ func Test_EndpointNameIsNotDefined(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
+	assert.Equal(t, logging.CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
 }
 
 func Test_EndpointUrlIsNotDefined(t *testing.T) {
@@ -325,7 +326,7 @@ func Test_EndpointUrlIsNotDefined(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
+	assert.Equal(t, logging.CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
 }
 
 func Test_EndpointTypeIsNotSupported(t *testing.T) {
@@ -371,7 +372,7 @@ func Test_EndpointTypeIsNotSupported(t *testing.T) {
 	cfg, err := parseConfigFile()
 	assert.Nil(t, cfg)
 	assert.NotNil(t, err)
-	assert.Equal(t, CONFIG__ENDPOINT_TYPE_IS_NOT_SUPPORTED, err.Error())
+	assert.Equal(t, logging.CONFIG__ENDPOINT_TYPE_IS_NOT_SUPPORTED, err.Error())
 }
 
 func Test_ConfigFileIsValid(t *testing.T) {

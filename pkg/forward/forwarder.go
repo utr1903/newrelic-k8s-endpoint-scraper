@@ -12,8 +12,6 @@ import (
 	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
-const NEW_RELIC_CUSTOM_EVENT_NAME = "K8sCustomEndpointScrapeSample"
-
 type Forwarder struct {
 	config *config.Config
 	client *http.Client
@@ -59,10 +57,9 @@ func (f *Forwarder) createNewRelicEvents() []map[string]string {
 
 		// All of the events are to be stored under "K8sCustomEndpointScrapeSample"
 		nrEvent := map[string]string{
-			"eventType":           NEW_RELIC_CUSTOM_EVENT_NAME,
-			"custom.endpointType": endpoint.Type,
-			"custom.endpointName": endpoint.Name,
-			"custom.endpointUrl":  endpoint.URL,
+			"eventType":    endpoint.Name,
+			"endpointType": endpoint.Type,
+			"endpointUrl":  endpoint.URL,
 		}
 
 		for endpointKey, endpointValue := range f.evs.GetEndpointValues(endpoint) {

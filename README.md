@@ -32,13 +32,12 @@ config:
     # Endpoints which are to be scraped
     # - type
     #   - kvp: key value pair
-    #   - json: json
     endpoints:
       - type: "kvp"
-        name: "my_endpoint_1"
+        name: "MyEndpoint1"
         url: "http://<SERVICE>.<NAMESPACE>.svc.cluster.local:<PORT>/<ENDPOINT>"
       - type: "kvp"
-        name: "my_endpoint_2"
+        name: "MyEndpoint2"
         url: "http://<IP_ADDRESS_OF_POD>:<PORT>/<ENDPOINT>"
 ```
 
@@ -62,10 +61,12 @@ You can build to `amd` or `arm` processors.
 ## Querying your data in New Relic
 
 The scraped endpoints will be forwarded to New Relic as custom
-events which will have the naem `K8sCustomEndpointScrapeSample`.
+events which will have the table name that you have defined within
+the corresponding endpoint block in the config file.
 
-You can query them as follows:
+You can query the individual endpoint data as follows:
 
 ```
-FROM K8sCustomEndpointScrapeSample SELECT *
+FROM MyEndpoint1 SELECT *
+FROM MyEndpoint2 SELECT *
 ```

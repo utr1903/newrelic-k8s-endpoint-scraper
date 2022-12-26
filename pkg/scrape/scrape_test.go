@@ -15,7 +15,6 @@ func Test_EndpointReturnsNotOkResponse(t *testing.T) {
 	endpointServerMock := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			// w.Write([]byte)
 		}))
 	defer endpointServerMock.Close()
 
@@ -23,9 +22,9 @@ func Test_EndpointReturnsNotOkResponse(t *testing.T) {
 		endpointServerMock.URL,
 	})
 	scraper := NewScraper(cfg)
-	scraper.Run()
+	evs := scraper.Run()
 
-	assert.Equal(t, 0, len(scraper.evs.Values))
+	assert.Equal(t, 0, len(evs.Values))
 }
 
 func Test_EndpointsAreScrapedSuccessfully(t *testing.T) {
@@ -56,9 +55,9 @@ func Test_EndpointsAreScrapedSuccessfully(t *testing.T) {
 		endpointServerMock2.URL,
 	})
 	scraper := NewScraper(cfg)
-	scraper.Run()
+	evs := scraper.Run()
 
-	assert.Equal(t, 2, len(scraper.evs.Values))
+	assert.Equal(t, 2, len(evs.Values))
 
 	for endpoint, values := range scraper.evs.Values {
 		if endpoint.URL == endpointServerMock1.URL {

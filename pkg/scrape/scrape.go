@@ -46,7 +46,7 @@ func NewScraper(
 }
 
 // Scrape endpoints
-func (s *EndpointScraper) Run() {
+func (s *EndpointScraper) Run() *config.EndpointValues {
 
 	// Loop & scrape all endpoints
 	s.config.Logger.Log(logrus.DebugLevel, "Looping over the endpoints to scrape...")
@@ -69,7 +69,7 @@ func (s *EndpointScraper) Run() {
 					"endpointUrl":  endpoint.URL,
 					"error":        err.Error(),
 				})
-			return
+			continue
 		}
 
 		// Perform HTTP request
@@ -82,7 +82,7 @@ func (s *EndpointScraper) Run() {
 					"endpointUrl":  endpoint.URL,
 					"error":        err.Error(),
 				})
-			return
+			continue
 		}
 		defer res.Body.Close()
 
@@ -94,7 +94,7 @@ func (s *EndpointScraper) Run() {
 					"endpointName": endpoint.Name,
 					"endpointUrl":  endpoint.URL,
 				})
-			return
+			continue
 		}
 
 		// Extract response body
@@ -107,7 +107,7 @@ func (s *EndpointScraper) Run() {
 					"endpointUrl":  endpoint.URL,
 					"error":        err.Error(),
 				})
-			return
+			continue
 		}
 
 		// Parse response body
@@ -116,6 +116,8 @@ func (s *EndpointScraper) Run() {
 			s.parse(&KvpParser{}, endpoint, body)
 		}
 	}
+
+	return s.evs
 }
 
 func (s *EndpointScraper) parse(
@@ -131,8 +133,4 @@ func (s *EndpointScraper) parse(
 			"endpointName": endpoint.Name,
 			"endpointUrl":  endpoint.URL,
 		})
-}
-
-func (s *EndpointScraper) GetEndpointValues() *config.EndpointValues {
-	return s.evs
 }

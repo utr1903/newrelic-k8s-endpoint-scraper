@@ -8,17 +8,17 @@ import (
 
 func main() {
 
-	// Parse and create config
-	config, err := config.NewConfig()
+	// Parse and create cfg
+	cfg, err := config.NewConfig()
 	if err != nil {
 		panic(err)
 	}
 
 	// Scrape endpoints
-	scraper := scraper.NewScraper(config)
-	scraper.Run()
+	scraper := scraper.NewScraper(cfg)
+	evs := scraper.Run()
 
 	// Forward endpoint values
-	forwarder := forwarder.NewForwarder(config, scraper.GetEndpointValues())
+	forwarder := forwarder.NewForwarder(cfg, evs)
 	forwarder.Run()
 }

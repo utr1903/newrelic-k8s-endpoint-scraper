@@ -22,13 +22,13 @@ func Test_NewRelicEventsAreCreated(t *testing.T) {
 		switch counter {
 		case 0:
 			assert.Equal(t, "ep1Url", nrEvent["endpointUrl"])
-			assert.Equal(t, "my_endpoint_"+"ep1Url", nrEvent["eventType"])
+			assert.Equal(t, "MyEndpoint"+"ep1Url", nrEvent["eventType"])
 			assert.Equal(t, "kvp", nrEvent["endpointType"])
 			assert.Equal(t, "v1", nrEvent["k1"])
 			assert.Equal(t, "v2", nrEvent["k2"])
 		case 1:
 			assert.Equal(t, "ep2Url", nrEvent["endpointUrl"])
-			assert.Equal(t, "my_endpoint_"+"ep2Url", nrEvent["eventType"])
+			assert.Equal(t, "MyEndpoint"+"ep2Url", nrEvent["eventType"])
 			assert.Equal(t, "kvp", nrEvent["endpointType"])
 			assert.Equal(t, "v3", nrEvent["k3"])
 			assert.Equal(t, "v4", nrEvent["k4"])
@@ -127,7 +127,7 @@ func createConfig(
 	for url := range endpointInfo {
 		eps = append(eps, config.Endpoint{
 			Type: "kvp",
-			Name: "my_endpoint_" + url,
+			Name: "MyEndpoint" + url,
 			URL:  url,
 		})
 	}

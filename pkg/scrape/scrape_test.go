@@ -80,7 +80,7 @@ func createConfig(
 	for i, ep := range endpointUrls {
 		eps = append(eps, config.Endpoint{
 			Type: "kvp",
-			Name: "my_endpoint_" + strconv.FormatInt(int64(i), 10),
+			Name: "MyEndpoint" + strconv.FormatInt(int64(i), 10),
 			URL:  ep,
 		})
 	}

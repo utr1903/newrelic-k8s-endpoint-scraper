@@ -9,7 +9,10 @@ import (
 func main() {
 
 	// Parse and create config
-	config := config.NewConfig()
+	config, err := config.NewConfig()
+	if err != nil {
+		panic(err)
+	}
 
 	// Scrape endpoints
 	scraper := scraper.NewScraper(config)

@@ -3,6 +3,7 @@ package forward
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -35,13 +36,13 @@ func NewForwarder(
 	}
 }
 
-func (f *Forwarder) Run() {
+func (f *Forwarder) Run() error {
 
 	// Create New Relic events
 	nrEvents := f.createNewRelicEvents()
 
 	// Flush data to New Relic
-	f.sendToNewRelic(nrEvents)
+	return f.sendToNewRelic(nrEvents)
 }
 
 func (f *Forwarder) createNewRelicEvents() []map[string]string {
@@ -75,17 +76,17 @@ func (f *Forwarder) createNewRelicEvents() []map[string]string {
 
 func (f *Forwarder) sendToNewRelic(
 	nrEvents []map[string]string,
-) {
+) error {
 
 	// Create payload
 	f.config.Logger.Log(logrus.DebugLevel, "Creating payload...")
 	json, err := json.Marshal(nrEvents)
 	if err != nil {
-		f.config.Logger.LogWithFields(logrus.ErrorLevel, "Payload could not be created.",
+		f.config.Logger.LogWithFields(logrus.ErrorLevel, config.FORWARD__PAYLOAD_COULD_NOT_BE_CREATED,
 			map[string]string{
 				"error": err.Error(),
 			})
-		return
+		return errors.New(config.FORWARD__PAYLOAD_COULD_NOT_BE_CREATED)
 	}
 	payload := bytes.NewReader(json)
 
@@ -93,11 +94,11 @@ func (f *Forwarder) sendToNewRelic(
 	f.config.Logger.Log(logrus.DebugLevel, "Creating HTTP request...")
 	req, err := http.NewRequest(http.MethodPost, f.config.Newrelic.EventsEndpoint, payload)
 	if err != nil {
-		f.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+		f.config.Logger.LogWithFields(logrus.ErrorLevel, config.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED,
 			map[string]string{
 				"error": err.Error(),
 			})
-		return
+		return errors.New(config.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED)
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Api-Key", f.config.Newrelic.LicenseKey)
@@ -106,12 +107,11 @@ func (f *Forwarder) sendToNewRelic(
 	f.config.Logger.Log(logrus.DebugLevel, "Performing HTTP request...")
 	res, err := f.client.Do(req)
 	if err != nil {
-		msg := "HTTP request has failed."
-		f.config.Logger.LogWithFields(logrus.ErrorLevel, msg,
+		f.config.Logger.LogWithFields(logrus.ErrorLevel, config.FORWARD__HTTP_REQUEST_HAS_FAILED,
 			map[string]string{
 				"error": err.Error(),
 			})
-		panic(msg)
+		return errors.New(config.FORWARD__HTTP_REQUEST_HAS_FAILED)
 	}
 	defer res.Body.Close()
 
@@ -119,8 +119,9 @@ func (f *Forwarder) sendToNewRelic(
 	if res.StatusCode == http.StatusOK {
 		f.config.Logger.Log(logrus.DebugLevel, "New Relic events are forwarded successfully.")
 	} else {
-		msg := "HTTP request has returned not OK status."
-		f.config.Logger.Log(logrus.ErrorLevel, msg)
-		panic(msg)
+		f.config.Logger.Log(logrus.ErrorLevel, config.FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS)
+		return errors.New(config.FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS)
 	}
+
+	return nil
 }

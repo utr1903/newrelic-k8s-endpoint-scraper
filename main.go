@@ -20,5 +20,8 @@ func main() {
 
 	// Forward endpoint values
 	forwarder := forwarder.NewForwarder(cfg, evs)
-	forwarder.Run()
+	err = forwarder.Run()
+	if err != nil {
+		panic(err)
+	}
 }

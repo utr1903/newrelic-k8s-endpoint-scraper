@@ -10,6 +10,32 @@ import (
 	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
+func Test_NewRelicEventsAreCreated(t *testing.T) {
+	endpointInfoMock := createEndpointInfoMock()
+	cfg := createConfig("", endpointInfoMock)
+	evs := createEndpointValues(cfg, endpointInfoMock)
+
+	forwarder := NewForwarder(cfg, evs)
+	nrEvents := forwarder.createNewRelicEvents()
+
+	for counter, nrEvent := range nrEvents {
+		switch counter {
+		case 0:
+			assert.Equal(t, "ep1Url", nrEvent["endpointUrl"])
+			assert.Equal(t, "my_endpoint_"+"ep1Url", nrEvent["eventType"])
+			assert.Equal(t, "kvp", nrEvent["endpointType"])
+			assert.Equal(t, "v1", nrEvent["k1"])
+			assert.Equal(t, "v2", nrEvent["k2"])
+		case 1:
+			assert.Equal(t, "ep2Url", nrEvent["endpointUrl"])
+			assert.Equal(t, "my_endpoint_"+"ep2Url", nrEvent["eventType"])
+			assert.Equal(t, "kvp", nrEvent["endpointType"])
+			assert.Equal(t, "v3", nrEvent["k3"])
+			assert.Equal(t, "v4", nrEvent["k4"])
+		}
+	}
+}
+
 func Test_HttpRequestCouldNotBeCreated(t *testing.T) {
 	endpointInfoMock := createEndpointInfoMock()
 	cfg := createConfig("::", endpointInfoMock)

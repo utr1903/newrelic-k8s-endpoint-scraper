@@ -7,15 +7,31 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
-func Test_HttpRequestFailed(t *testing.T) {
+func Test_HttpRequestCouldNotBeCreated(t *testing.T) {
+	endpointInfoMock := createEndpointInfoMock()
+	cfg := createConfig("::", endpointInfoMock)
+	evs := createEndpointValues(cfg, endpointInfoMock)
+
+	forwarder := NewForwarder(cfg, evs)
+	err := forwarder.Run()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED, err.Error())
+}
+
+func Test_HttpRequestHasFailed(t *testing.T) {
 	endpointInfoMock := createEndpointInfoMock()
 	cfg := createConfig("", endpointInfoMock)
 	evs := createEndpointValues(cfg, endpointInfoMock)
 
 	forwarder := NewForwarder(cfg, evs)
-	assert.Panics(t, func() { forwarder.Run() })
+	err := forwarder.Run()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.FORWARD__HTTP_REQUEST_HAS_FAILED, err.Error())
 }
 
 func Test_NewRelicReturnsNotOkResponse(t *testing.T) {
@@ -30,7 +46,10 @@ func Test_NewRelicReturnsNotOkResponse(t *testing.T) {
 	evs := createEndpointValues(cfg, endpointInfoMock)
 
 	forwarder := NewForwarder(cfg, evs)
-	assert.Panics(t, func() { forwarder.Run() })
+	err := forwarder.Run()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS, err.Error())
 }
 
 func Test_EventsAreSent(t *testing.T) {
@@ -45,7 +64,8 @@ func Test_EventsAreSent(t *testing.T) {
 	evs := createEndpointValues(cfg, endpointInfoMock)
 
 	forwarder := NewForwarder(cfg, evs)
-	assert.NotPanics(t, func() { forwarder.Run() })
+	err := forwarder.Run()
+	assert.Nil(t, err)
 }
 
 func createEndpointValues(
@@ -91,7 +111,7 @@ func createConfig(
 			EventsEndpoint: newrelicEventsUrl,
 			LicenseKey:     "",
 		},
-		Logger:    config.NewLogger(logLevel),
+		Logger:    logging.NewLogger(logLevel),
 		Endpoints: eps,
 	}
 }

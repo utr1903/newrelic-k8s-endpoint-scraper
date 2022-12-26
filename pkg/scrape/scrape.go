@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 // Object which is responsible for scraping
@@ -46,7 +47,7 @@ func NewScraper(
 }
 
 // Scrape endpoints
-func (s *EndpointScraper) Run() {
+func (s *EndpointScraper) Run() *config.EndpointValues {
 
 	// Loop & scrape all endpoints
 	s.config.Logger.Log(logrus.DebugLevel, "Looping over the endpoints to scrape...")
@@ -62,52 +63,52 @@ func (s *EndpointScraper) Run() {
 		// Create HTTP request
 		req, err := http.NewRequest(http.MethodGet, endpoint.URL, nil)
 		if err != nil {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__HTTP_REQUEST_COULD_NOT_BE_CREATED,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
 					"endpointUrl":  endpoint.URL,
 					"error":        err.Error(),
 				})
-			return
+			continue
 		}
 
 		// Perform HTTP request
 		res, err := s.client.Do(req)
 		if err != nil {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request could not be created.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__HTTP_REQUEST_HAS_FAILED,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
 					"endpointUrl":  endpoint.URL,
 					"error":        err.Error(),
 				})
-			return
+			continue
 		}
 		defer res.Body.Close()
 
 		// Check if call was successful
 		if res.StatusCode != http.StatusOK {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "HTTP request has returned not OK status.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__ENDPOINT_RETURNED_NOT_OK_STATUS,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
 					"endpointUrl":  endpoint.URL,
 				})
-			return
+			continue
 		}
 
 		// Extract response body
 		body, err := readResponseBody(res.Body)
 		if err != nil {
-			s.config.Logger.LogWithFields(logrus.ErrorLevel, "Response body could not be parsed.",
+			s.config.Logger.LogWithFields(logrus.ErrorLevel, logging.SCRAPE__RESPONSE_BODY_COULD_NOT_BE_PARSED,
 				map[string]string{
 					"endpointType": endpoint.Type,
 					"endpointName": endpoint.Name,
 					"endpointUrl":  endpoint.URL,
 					"error":        err.Error(),
 				})
-			return
+			continue
 		}
 
 		// Parse response body
@@ -116,6 +117,8 @@ func (s *EndpointScraper) Run() {
 			s.parse(&KvpParser{}, endpoint, body)
 		}
 	}
+
+	return s.evs
 }
 
 func (s *EndpointScraper) parse(
@@ -131,8 +134,4 @@ func (s *EndpointScraper) parse(
 			"endpointName": endpoint.Name,
 			"endpointUrl":  endpoint.URL,
 		})
-}
-
-func (s *EndpointScraper) GetEndpointValues() *config.EndpointValues {
-	return s.evs
 }

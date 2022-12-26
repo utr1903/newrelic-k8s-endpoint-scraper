@@ -1,12 +1,16 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/sirupsen/logrus"
+
 	yaml "gopkg.in/yaml.v2"
+
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 type Endpoint struct {
@@ -24,7 +28,7 @@ type NewRelicInput struct {
 type Config struct {
 	Newrelic  *NewRelicInput `yaml:"newrelic"`
 	Endpoints []Endpoint     `yaml:"endpoints"`
-	Logger    *Logger
+	Logger    *logging.Logger
 }
 
 var getEnv = func(
@@ -42,102 +46,126 @@ var readFile = func(
 	return ioutil.ReadFile(path)
 }
 
-func NewConfig() *Config {
+func NewConfig() (
+	*Config,
+	error,
+) {
 
 	// Parse config file
-	cfg := parseConfigFile()
-
-	// Create logger
-	cfg.Logger = NewLogger(cfg.Newrelic.LogLevel)
+	cfg, err := parseConfigFile()
+	if err != nil {
+		return nil, err
+	}
 
 	// Parse New Relic license key
-	cfg.Newrelic.LicenseKey = parseNewRelicLicenseKey()
-	cfg.Newrelic.EventsEndpoint = setNewRelicEventsEndpoint(cfg.Newrelic.LicenseKey)
+	licenseKey, err := parseNewRelicLicenseKey()
+	if err != nil {
+		return nil, err
+	}
+	cfg.Newrelic.LicenseKey = licenseKey
+
+	// Set New Relic events endpoint
+	eventsEndpoint, err := setNewRelicEventsEndpoint(cfg.Newrelic.LicenseKey)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Newrelic.EventsEndpoint = eventsEndpoint
 
 	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
-	return cfg
+	return cfg, nil
 }
 
-func parseConfigFile() *Config {
+func parseConfigFile() (
+	*Config,
+	error,
+) {
 
 	// Get & check config path
 	configPath := getEnv("CONFIG_PATH")
 	if configPath == "" {
-		msg := "Config path is not defined!"
-		fmt.Println(msg)
-		panic(msg)
+		fmt.Println(logging.CONFIG__CONFIG_PATH_IS_NOT_DEFINED)
+		return nil, errors.New(logging.CONFIG__CONFIG_PATH_IS_NOT_DEFINED)
 	}
 
 	// Read config file
 	configFile, err := readFile(configPath)
 	if err != nil {
-		fmt.Println("Config file could not be read!")
-		panic(err)
+		fmt.Println(logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_READ)
+		return nil, errors.New(logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_READ)
 	}
 
 	// Parse config file
 	var cfg Config
 	err = yaml.Unmarshal(configFile, &cfg)
 	if err != nil {
-		fmt.Println("Config file could not be parsed into yaml format!")
-		panic(err)
+		fmt.Println(logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML)
+		return nil, errors.New(logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML)
 	}
+
+	// Create logger
+	cfg.Logger = logging.NewLogger(cfg.Newrelic.LogLevel)
 
 	// Check if endpoints are defined correctly
-	checkEndpoints(&cfg)
-
-	return &cfg
-}
-
-func parseNewRelicLicenseKey() string {
-	nrLicenseKey := getEnv("NEW_RELIC_LICENSE_KEY")
-	if nrLicenseKey == "" {
-		msg := "License key is not provided! Define config.data.newrelic.licenseKey in your Helm deployment."
-		fmt.Println(msg)
-		panic(msg)
+	err = checkEndpoints(&cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	return nrLicenseKey
+	return &cfg, nil
+}
+
+func parseNewRelicLicenseKey() (
+	string,
+	error,
+) {
+	nrLicenseKey := getEnv("NEW_RELIC_LICENSE_KEY")
+	if nrLicenseKey == "" {
+		fmt.Println(logging.CONFIG__LICENSE_KEY_IS_NOT_PROVIDED)
+		return "", errors.New(logging.CONFIG__LICENSE_KEY_IS_NOT_PROVIDED)
+	}
+
+	return nrLicenseKey, nil
 }
 
 func setNewRelicEventsEndpoint(
 	licenseKey string,
-) string {
+) (
+	string,
+	error,
+) {
 
 	nrAccountId := getEnv("NEW_RELIC_ACCOUNT_ID")
 	if nrAccountId == "" {
-		msg := "Account ID not provided! Define config.data.newrelic.accountId in your Helm deployment."
-		fmt.Println(msg)
-		panic(msg)
+		fmt.Println(logging.CONFIG__ACCOUNT_ID_IS_NOT_PROVIDED)
+		return "", errors.New(logging.CONFIG__ACCOUNT_ID_IS_NOT_PROVIDED)
 	}
 
 	if licenseKey[0:2] == "eu" {
-		return "https://insights-collector.eu01.nr-data.net/v1/accounts/" + nrAccountId + "/events"
+		return "https://insights-collector.eu01.nr-data.net/v1/accounts/" + nrAccountId + "/events", nil
 	} else {
-		return "https://insights-collector.nr-data.net/v1/accounts/" + nrAccountId + "/events"
+		return "https://insights-collector.nr-data.net/v1/accounts/" + nrAccountId + "/events", nil
 	}
 }
 
 func checkEndpoints(
 	cfg *Config,
-) {
+) error {
 	if cfg.Endpoints == nil || len(cfg.Endpoints) == 0 {
-		msg := "No endpoint is defined!"
-		cfg.Logger.Log(logrus.ErrorLevel, msg)
-		panic(msg)
+		cfg.Logger.Log(logrus.ErrorLevel, logging.CONFIG__NO_ENDPOINT_IS_DEFINED)
+		return errors.New(logging.CONFIG__NO_ENDPOINT_IS_DEFINED)
 	}
 
 	for _, endpoint := range cfg.Endpoints {
 		if endpoint.Type == "" || endpoint.Name == "" || endpoint.URL == "" {
-			msg := "Check your endpoint definitions! Type, Name and URL must be defined!"
-			cfg.Logger.Log(logrus.ErrorLevel, msg)
-			panic(msg)
+			cfg.Logger.Log(logrus.ErrorLevel, logging.CONFIG__ENDPOINT_INFO_IS_MISSING)
+			return errors.New(logging.CONFIG__ENDPOINT_INFO_IS_MISSING)
 		}
 
 		if endpoint.Type != "kvp" {
-			msg := "Only the following types are supported: kvp!"
-			cfg.Logger.Log(logrus.ErrorLevel, msg)
-			panic(msg)
+			cfg.Logger.Log(logrus.ErrorLevel, logging.CONFIG__ENDPOINT_TYPE_IS_NOT_SUPPORTED)
+			return errors.New(logging.CONFIG__ENDPOINT_TYPE_IS_NOT_SUPPORTED)
 		}
 	}
+
+	return nil
 }

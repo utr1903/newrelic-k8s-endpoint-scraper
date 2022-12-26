@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 	"gopkg.in/yaml.v2"
 )
 
@@ -16,7 +17,11 @@ func Test_NewRelicLicenseKeyIsNotDefined(t *testing.T) {
 	getEnv = func(string) string {
 		return ""
 	}
-	assert.Panics(t, func() { parseNewRelicLicenseKey() })
+
+	licenseKey, err := parseNewRelicLicenseKey()
+	assert.Equal(t, "", licenseKey)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__LICENSE_KEY_IS_NOT_PROVIDED, err.Error())
 }
 
 func Test_NewRelicLicenseKeyIsDefined(t *testing.T) {
@@ -25,10 +30,14 @@ func Test_NewRelicLicenseKeyIsDefined(t *testing.T) {
 		getEnv = getEnvMock
 	}()
 
+	licenseKeyExpected := "LICENSE_KEY"
 	getEnv = func(string) string {
-		return "LICENSE_KEY"
+		return licenseKeyExpected
 	}
-	assert.NotPanics(t, func() { parseNewRelicLicenseKey() })
+
+	licenseKeyActual, err := parseNewRelicLicenseKey()
+	assert.Equal(t, licenseKeyExpected, licenseKeyActual)
+	assert.Nil(t, err)
 }
 
 func Test_NewRelicAccountIdIsNotDefined(t *testing.T) {
@@ -37,10 +46,16 @@ func Test_NewRelicAccountIdIsNotDefined(t *testing.T) {
 		getEnv = getEnvMock
 	}()
 
+	licenseKey := ""
+	accountId := ""
 	getEnv = func(string) string {
-		return ""
+		return accountId
 	}
-	assert.Panics(t, func() { setNewRelicEventsEndpoint("") })
+
+	eventsEndpoint, err := setNewRelicEventsEndpoint(licenseKey)
+	assert.Equal(t, "", eventsEndpoint)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__ACCOUNT_ID_IS_NOT_PROVIDED, err.Error())
 }
 
 func Test_NewRelicEndpointIsEu(t *testing.T) {
@@ -49,11 +64,18 @@ func Test_NewRelicEndpointIsEu(t *testing.T) {
 		getEnv = getEnvMock
 	}()
 
+	licenseKey := "eu_LICENSE_KEY"
 	nrAccountId := "ACCOUNT_ID"
 	getEnv = func(string) string {
 		return nrAccountId
 	}
-	assert.Equal(t, "https://insights-collector.eu01.nr-data.net/v1/accounts/"+nrAccountId+"/events", setNewRelicEventsEndpoint("eu_LICENSE_KEY"))
+
+	eventsEndpoint, err := setNewRelicEventsEndpoint(licenseKey)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"https://insights-collector.eu01.nr-data.net/v1/accounts/"+nrAccountId+"/events",
+		eventsEndpoint,
+	)
 }
 
 func Test_NewRelicEndpointIsUs(t *testing.T) {
@@ -62,11 +84,18 @@ func Test_NewRelicEndpointIsUs(t *testing.T) {
 		getEnv = getEnvMock
 	}()
 
+	licenseKey := "us_LICENSE_KEY"
 	nrAccountId := "ACCOUNT_ID"
 	getEnv = func(string) string {
 		return nrAccountId
 	}
-	assert.Equal(t, "https://insights-collector.nr-data.net/v1/accounts/"+nrAccountId+"/events", setNewRelicEventsEndpoint("LICENSE_KEY"))
+
+	eventsEndpoint, err := setNewRelicEventsEndpoint(licenseKey)
+	assert.Nil(t, err)
+	assert.Equal(t,
+		"https://insights-collector.nr-data.net/v1/accounts/"+nrAccountId+"/events",
+		eventsEndpoint,
+	)
 }
 
 func Test_ConfigFilePathIsNotDefined(t *testing.T) {
@@ -78,7 +107,11 @@ func Test_ConfigFilePathIsNotDefined(t *testing.T) {
 	getEnv = func(string) string {
 		return ""
 	}
-	assert.Panics(t, func() { parseConfigFile() })
+
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__CONFIG_PATH_IS_NOT_DEFINED, err.Error())
 }
 
 func Test_ConfigFileIsNotDefined(t *testing.T) {
@@ -90,7 +123,11 @@ func Test_ConfigFileIsNotDefined(t *testing.T) {
 	getEnv = func(string) string {
 		return "CONFIG_PATH"
 	}
-	assert.Panics(t, func() { parseConfigFile() })
+
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_READ, err.Error())
 }
 
 func Test_ConfigFileHasInvalidYamlFormat(t *testing.T) {
@@ -112,7 +149,10 @@ func Test_ConfigFileHasInvalidYamlFormat(t *testing.T) {
 		return []byte("false config"), nil
 	}
 
-	assert.Panics(t, func() { parseConfigFile() })
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML, err.Error())
 }
 
 func Test_NoEndpointIsDefined(t *testing.T) {
@@ -148,7 +188,10 @@ func Test_NoEndpointIsDefined(t *testing.T) {
 		return bytes, nil
 	}
 
-	assert.Panics(t, func() { parseConfigFile() })
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__NO_ENDPOINT_IS_DEFINED, err.Error())
 }
 
 func Test_EndpointTypeIsNotDefined(t *testing.T) {
@@ -190,7 +233,10 @@ func Test_EndpointTypeIsNotDefined(t *testing.T) {
 		return bytes, nil
 	}
 
-	assert.Panics(t, func() { parseConfigFile() })
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
 }
 
 func Test_EndpointNameIsNotDefined(t *testing.T) {
@@ -232,7 +278,10 @@ func Test_EndpointNameIsNotDefined(t *testing.T) {
 		return bytes, nil
 	}
 
-	assert.Panics(t, func() { parseConfigFile() })
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
 }
 
 func Test_EndpointUrlIsNotDefined(t *testing.T) {
@@ -274,7 +323,10 @@ func Test_EndpointUrlIsNotDefined(t *testing.T) {
 		return bytes, nil
 	}
 
-	assert.Panics(t, func() { parseConfigFile() })
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__ENDPOINT_INFO_IS_MISSING, err.Error())
 }
 
 func Test_EndpointTypeIsNotSupported(t *testing.T) {
@@ -317,7 +369,10 @@ func Test_EndpointTypeIsNotSupported(t *testing.T) {
 		return bytes, nil
 	}
 
-	assert.Panics(t, func() { parseConfigFile() })
+	cfg, err := parseConfigFile()
+	assert.Nil(t, cfg)
+	assert.NotNil(t, err)
+	assert.Equal(t, logging.CONFIG__ENDPOINT_TYPE_IS_NOT_SUPPORTED, err.Error())
 }
 
 func Test_ConfigFileIsValid(t *testing.T) {

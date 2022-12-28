@@ -12,7 +12,7 @@ spec:
   jobTemplate:
     spec:
       template:
-          {{- with .Values.podAnnotations }}
+          {{- with .Values.cronjob.podAnnotations }}
         annotations:
           {{- toYaml . | nindent 10 }}
           {{- end }}
@@ -20,11 +20,11 @@ spec:
           serviceAccountName: {{ include "scraper.fullname" . }}
           containers:
             - name: {{ .Chart.Name }}
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              image: "{{ .Values.scraper.image.repository }}:{{ .Values.scraper.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.scraper.image.pullPolicy }}
               env:
                 - name: NEW_RELIC_ACCOUNT_ID
-                  value:  "{{ .Values.config.data.newrelic.accountId }}"
+                  value:  "{{ .Values.scraper.config.newrelic.accountId }}"
                 - name: NEW_RELIC_LICENSE_KEY
                   valueFrom:
                     secretKeyRef:
@@ -32,25 +32,25 @@ spec:
                       key: licenseKey
                       optional: false
                 - name: CONFIG_PATH
-                  value: "{{ .Values.config.mountPath }}/config.yaml"
+                  value: "{{ .Values.scraper.mountPathConfig }}/config.yaml"
               volumeMounts:
                 - name: config
-                  mountPath: {{ .Values.config.mountPath }}
-          restartPolicy: {{ .Values.restartPolicy }}
+                  mountPath: {{ .Values.scraper.mountPathConfig }}
+          restartPolicy: {{ .Values.cronjob.restartPolicy }}
           volumes:
             - name: config
               configMap:
                 name: {{ include "scraper.fullname" . }}
                 optional: false
-          {{- with .Values.nodeSelector }}
+          {{- with .Values.cronjob.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- with .Values.cronjob.affinity }}
           affinity:
             {{- toYaml . | nindent 14 }}
           {{- end }}
-          {{- with .Values.tolerations }}
+          {{- with .Values.cronjob.tolerations }}
           tolerations:
             {{- toYaml . | nindent 14 }}
           {{- end }}

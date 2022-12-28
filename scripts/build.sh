@@ -13,7 +13,7 @@ while (( "$#" )); do
   esac
 done
 
-imageTag="1.0.0"
+imageTag="1.1.0"
 if [[ $arm == "true" ]]; then
   imageName="newrelic-kubernetes-endpoint-scraper-arm"
   platform="linux/arm64"

@@ -79,8 +79,8 @@ config:
     #   - json: json
     endpoints: []
       # - type: "kvp"
-      #   name: "my_endpoint_1"
+      #   name: "MyEndpoint1"
       #   url: "http://<SERVICE>.<NAMESPACE>.svc.cluster.local:<PORT>/<ENDPOINT>"
       # - type: "kvp"
-      #   name: "my_endpoint_2"
+      #   name: "MyEndpoint2"
       #   url: "http://<IP_ADDRESS_OF_POD>:<PORT>/<ENDPOINT>"

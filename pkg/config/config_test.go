@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
+	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 	"gopkg.in/yaml.v2"
 )
 

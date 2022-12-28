@@ -8,7 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
-	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
+	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 // Object which is responsible for scraping

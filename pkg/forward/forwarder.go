@@ -2,6 +2,7 @@ package forward
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -86,11 +87,32 @@ func (f *Forwarder) sendToNewRelic(
 			})
 		return errors.New(logging.FORWARD__PAYLOAD_COULD_NOT_BE_CREATED)
 	}
-	payload := bytes.NewReader(json)
+
+	// Zip the payload
+	f.config.Logger.Log(logrus.DebugLevel, "Zipping payload...")
+	var payloadZipped bytes.Buffer
+	zw := gzip.NewWriter(&payloadZipped)
+	defer zw.Close()
+
+	if _, err = zw.Write(json); err != nil {
+		f.config.Logger.LogWithFields(logrus.ErrorLevel, logging.FORWARD__PAYLOAD_COULD_NOT_BE_ZIPPED,
+			map[string]string{
+				"error": err.Error(),
+			})
+		return errors.New(logging.FORWARD__PAYLOAD_COULD_NOT_BE_ZIPPED)
+	}
+
+	if err = zw.Close(); err != nil {
+		f.config.Logger.LogWithFields(logrus.ErrorLevel, logging.FORWARD__PAYLOAD_COULD_NOT_BE_ZIPPED,
+			map[string]string{
+				"error": err.Error(),
+			})
+		return errors.New(logging.FORWARD__PAYLOAD_COULD_NOT_BE_ZIPPED)
+	}
 
 	// Create HTTP request
 	f.config.Logger.Log(logrus.DebugLevel, "Creating HTTP request...")
-	req, err := http.NewRequest(http.MethodPost, f.config.Newrelic.EventsEndpoint, payload)
+	req, err := http.NewRequest(http.MethodPost, f.config.Newrelic.EventsEndpoint, &payloadZipped)
 	if err != nil {
 		f.config.Logger.LogWithFields(logrus.ErrorLevel, logging.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED,
 			map[string]string{
@@ -98,7 +120,7 @@ func (f *Forwarder) sendToNewRelic(
 			})
 		return errors.New(logging.FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED)
 	}
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", "application/gzip")
 	req.Header.Add("Api-Key", f.config.Newrelic.LicenseKey)
 
 	// Perform HTTP request

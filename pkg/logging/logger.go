@@ -28,10 +28,14 @@ const (
 	FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED = "http request could not be created"
 	FORWARD__HTTP_REQUEST_HAS_FAILED           = "http request has failed"
 	FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS  = "http request has returned not OK status"
+
+	// logs
+	LOGS__PAYLOAD_COULD_NOT_BE_CREATED = "payload could not be created"
 )
 
 type Logger struct {
-	log *logrus.Logger
+	log       *logrus.Logger
+	forwarder *forwarder
 }
 
 func NewLogger(
@@ -49,7 +53,33 @@ func NewLogger(
 	}
 
 	return &Logger{
-		log: l,
+		log:       l,
+		forwarder: nil,
+	}
+}
+
+func NewLoggerWithForwarder(
+	logLevel string,
+	licenseKey string,
+	logsEndpoint string,
+) *Logger {
+	l := logrus.New()
+	l.Out = os.Stdout
+	l.Formatter = &logrus.JSONFormatter{}
+
+	switch logLevel {
+	case "DEBUG":
+		l.Level = logrus.DebugLevel
+	default:
+		l.Level = logrus.ErrorLevel
+	}
+
+	f := newForwarder(logrus.AllLevels, licenseKey, logsEndpoint)
+	l.AddHook(f)
+
+	return &Logger{
+		log:       l,
+		forwarder: f,
 	}
 }
 
@@ -76,11 +106,10 @@ func (l *Logger) LogWithFields(
 	attributes map[string]string,
 ) {
 
-	fields := logrus.Fields{
-		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
-	}
+	commonAttributes := getCommonAttributes()
 
-	for key, val := range attributes {
+	fields := logrus.Fields{}
+	for key, val := range commonAttributes {
 		fields[key] = val
 	}
 
@@ -90,4 +119,14 @@ func (l *Logger) LogWithFields(
 	default:
 		l.log.WithFields(fields).Debug(msg)
 	}
+}
+
+func getCommonAttributes() map[string]string {
+	return map[string]string{
+		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
+	}
+}
+
+func (l *Logger) Flush() {
+	l.forwarder.flush()
 }

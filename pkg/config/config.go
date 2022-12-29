@@ -21,7 +21,9 @@ type Endpoint struct {
 
 type NewRelicInput struct {
 	LogLevel       string `default:"ERROR" yaml:"logLevel"`
+	LogForwarding  bool   `default:"true" yaml:"logForwarding"`
 	EventsEndpoint string
+	LogsEndpoint   string
 	LicenseKey     string
 }
 
@@ -71,6 +73,9 @@ func NewConfig() (
 	}
 	cfg.Newrelic.EventsEndpoint = eventsEndpoint
 
+	// Set New Relic logs endpoints
+	cfg.Newrelic.LogsEndpoint = setNewRelicLogsEndpoint(cfg.Newrelic.LicenseKey)
+
 	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
 	return cfg, nil
 }
@@ -103,7 +108,17 @@ func parseConfigFile() (
 	}
 
 	// Create logger
-	cfg.Logger = logging.NewLogger(cfg.Newrelic.LogLevel)
+	if cfg.Newrelic.LogForwarding {
+		cfg.Logger = logging.NewLoggerWithForwarder(
+			cfg.Newrelic.LogLevel,
+			cfg.Newrelic.LicenseKey,
+			cfg.Newrelic.LogsEndpoint,
+		)
+	} else {
+		cfg.Logger = logging.NewLogger(
+			cfg.Newrelic.LogLevel,
+		)
+	}
 
 	// Check if endpoints are defined correctly
 	err = checkEndpoints(&cfg)
@@ -144,6 +159,16 @@ func setNewRelicEventsEndpoint(
 		return "https://insights-collector.eu01.nr-data.net/v1/accounts/" + nrAccountId + "/events", nil
 	} else {
 		return "https://insights-collector.nr-data.net/v1/accounts/" + nrAccountId + "/events", nil
+	}
+}
+
+func setNewRelicLogsEndpoint(
+	licenseKey string,
+) string {
+	if licenseKey[0:2] == "eu" {
+		return "https://log-api.eu.newrelic.com/log/v1"
+	} else {
+		return "https://log-api.newrelic.com/log/v1"
 	}
 }
 

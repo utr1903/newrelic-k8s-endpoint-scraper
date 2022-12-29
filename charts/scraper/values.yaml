@@ -44,6 +44,8 @@ scraper:
       licenseKey: ""
       # Log level can be: DEBUG, ERROR
       logLevel: ERROR
+      # Flag to enable log forwarding to New Relic
+      logForwarding: true
     # Endpoints which are to be scraped
     # - type
     #   - kvp: key value pair

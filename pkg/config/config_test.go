@@ -58,7 +58,7 @@ func Test_NewRelicAccountIdIsNotDefined(t *testing.T) {
 	assert.Equal(t, logging.CONFIG__ACCOUNT_ID_IS_NOT_PROVIDED, err.Error())
 }
 
-func Test_NewRelicEndpointIsEu(t *testing.T) {
+func Test_NewRelicAccountIsInEu(t *testing.T) {
 	getEnvMock := getEnv
 	defer func() {
 		getEnv = getEnvMock
@@ -76,9 +76,15 @@ func Test_NewRelicEndpointIsEu(t *testing.T) {
 		"https://insights-collector.eu01.nr-data.net/v1/accounts/"+nrAccountId+"/events",
 		eventsEndpoint,
 	)
+
+	logsEndpoint := setNewRelicLogsEndpoint(licenseKey)
+	assert.Equal(t,
+		"https://log-api.eu.newrelic.com/log/v1",
+		logsEndpoint,
+	)
 }
 
-func Test_NewRelicEndpointIsUs(t *testing.T) {
+func Test_NewRelicAccountIsInUs(t *testing.T) {
 	getEnvMock := getEnv
 	defer func() {
 		getEnv = getEnvMock
@@ -95,6 +101,12 @@ func Test_NewRelicEndpointIsUs(t *testing.T) {
 	assert.Equal(t,
 		"https://insights-collector.nr-data.net/v1/accounts/"+nrAccountId+"/events",
 		eventsEndpoint,
+	)
+
+	logsEndpoint := setNewRelicLogsEndpoint(licenseKey)
+	assert.Equal(t,
+		"https://log-api.newrelic.com/log/v1",
+		logsEndpoint,
 	)
 }
 

@@ -55,7 +55,7 @@ func (f *Forwarder) createNewRelicEvents() []map[string]string {
 
 	for _, endpoint := range endpoints {
 
-		// All of the events are to be stored under "K8sCustomEndpointScrapeSample"
+		// All of the events are to be stored under "endpoint.Name"
 		nrEvent := map[string]string{
 			"eventType":    endpoint.Name,
 			"endpointType": endpoint.Type,

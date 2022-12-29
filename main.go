@@ -28,8 +28,8 @@ func main() {
 	}
 
 	// Send the app logs to New Relic
-	cfg.Logger.Flush()
+	err = cfg.Logger.Flush()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(err)
 	}
 }

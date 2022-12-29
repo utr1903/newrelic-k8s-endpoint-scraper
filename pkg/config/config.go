@@ -59,23 +59,6 @@ func NewConfig() (
 		return nil, err
 	}
 
-	// Parse New Relic license key
-	licenseKey, err := parseNewRelicLicenseKey()
-	if err != nil {
-		return nil, err
-	}
-	cfg.Newrelic.LicenseKey = licenseKey
-
-	// Set New Relic events endpoint
-	eventsEndpoint, err := setNewRelicEventsEndpoint(cfg.Newrelic.LicenseKey)
-	if err != nil {
-		return nil, err
-	}
-	cfg.Newrelic.EventsEndpoint = eventsEndpoint
-
-	// Set New Relic logs endpoints
-	cfg.Newrelic.LogsEndpoint = setNewRelicLogsEndpoint(cfg.Newrelic.LicenseKey)
-
 	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
 	return cfg, nil
 }
@@ -106,6 +89,23 @@ func parseConfigFile() (
 		fmt.Println(logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML)
 		return nil, errors.New(logging.CONFIG__CONFIG_FILE_COULD_NOT_BE_PARSED_INTO_YAML)
 	}
+
+	// Parse New Relic license key
+	licenseKey, err := parseNewRelicLicenseKey()
+	if err != nil {
+		return nil, err
+	}
+	cfg.Newrelic.LicenseKey = licenseKey
+
+	// Set New Relic events endpoint
+	eventsEndpoint, err := setNewRelicEventsEndpoint(cfg.Newrelic.LicenseKey)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Newrelic.EventsEndpoint = eventsEndpoint
+
+	// Set New Relic logs endpoints
+	cfg.Newrelic.LogsEndpoint = setNewRelicLogsEndpoint(cfg.Newrelic.LicenseKey)
 
 	// Create logger
 	if cfg.Newrelic.LogForwarding {

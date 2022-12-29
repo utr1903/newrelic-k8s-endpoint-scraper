@@ -30,7 +30,10 @@ const (
 	FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS  = "http request has returned not OK status"
 
 	// logs
-	LOGS__PAYLOAD_COULD_NOT_BE_CREATED = "payload could not be created"
+	LOGS__PAYLOAD_COULD_NOT_BE_CREATED      = "payload could not be created"
+	LOGS__HTTP_REQUEST_COULD_NOT_BE_CREATED = "http request could not be created"
+	LOGS__HTTP_REQUEST_HAS_FAILED           = "http request has failed"
+	LOGS__NEW_RELIC_RETURNED_NOT_OK_STATUS  = "http request has returned not OK status"
 )
 
 type Logger struct {
@@ -127,6 +130,6 @@ func getCommonAttributes() map[string]string {
 	}
 }
 
-func (l *Logger) Flush() {
-	l.forwarder.flush()
+func (l *Logger) Flush() error {
+	return l.forwarder.flush()
 }

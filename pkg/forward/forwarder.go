@@ -26,7 +26,7 @@ func NewForwarder(
 	// Create HTTP client
 	client := http.Client{Timeout: time.Duration(30 * time.Second)}
 
-	cfg.Logger.Log(logrus.DebugLevel, "Endpoint values are parsed.")
+	cfg.Logger.Log(logrus.DebugLevel, "Forwarder is succesfully initialized.")
 
 	return &Forwarder{
 		config: cfg,

@@ -37,7 +37,7 @@ func NewScraper(
 
 	evs := config.NewEndpointValues()
 
-	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
+	cfg.Logger.Log(logrus.DebugLevel, "Scraper is succesfully initialized.")
 
 	return &EndpointScraper{
 		config: cfg,

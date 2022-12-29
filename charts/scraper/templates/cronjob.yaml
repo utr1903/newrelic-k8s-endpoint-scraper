@@ -23,6 +23,18 @@ spec:
               image: "{{ .Values.scraper.image.repository }}:{{ .Values.scraper.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.scraper.image.pullPolicy }}
               env:
+                - name: NODE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+                - name: NAMESPACE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
                 - name: NEW_RELIC_ACCOUNT_ID
                   value:  "{{ .Values.scraper.config.newrelic.accountId }}"
                 - name: NEW_RELIC_LICENSE_KEY

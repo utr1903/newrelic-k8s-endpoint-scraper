@@ -133,9 +133,24 @@ func (l *Logger) LogWithFields(
 }
 
 func getCommonAttributes() map[string]string {
-	return map[string]string{
+	attrs := map[string]string{
 		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
 	}
+	// Node name
+	if val := os.Getenv("NODE_NAME"); val != "" {
+		attrs["nodeName"] = val
+	}
+
+	// Namespace name
+	if val := os.Getenv("NAMESPACE_NAME"); val != "" {
+		attrs["namespaceName"] = val
+	}
+
+	// Pod name
+	if val := os.Getenv("POD_NAME"); val != "" {
+		attrs["podName"] = val
+	}
+	return attrs
 }
 
 func (l *Logger) Flush() error {

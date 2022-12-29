@@ -91,8 +91,11 @@ func (l *Logger) Log(
 	msg string,
 ) {
 
-	fields := logrus.Fields{
-		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
+	fields := logrus.Fields{}
+
+	// Put common attributes
+	for key, val := range getCommonAttributes() {
+		fields[key] = val
 	}
 
 	switch lvl {
@@ -109,10 +112,15 @@ func (l *Logger) LogWithFields(
 	attributes map[string]string,
 ) {
 
-	commonAttributes := getCommonAttributes()
-
 	fields := logrus.Fields{}
-	for key, val := range commonAttributes {
+
+	// Put common attributes
+	for key, val := range getCommonAttributes() {
+		fields[key] = val
+	}
+
+	// Put specific attributes
+	for key, val := range attributes {
 		fields[key] = val
 	}
 

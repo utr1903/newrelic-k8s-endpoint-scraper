@@ -2,6 +2,7 @@ package logging
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -105,19 +106,19 @@ func (f *forwarder) sendToNewRelic(
 	nrLogs []logObject,
 ) error {
 
-	// Create payload
-	json, err := json.Marshal(nrLogs)
+	// Create zipped payload
+	payloadZipped, err := f.createPayload(nrLogs)
 	if err != nil {
-		return errors.New(LOGS__PAYLOAD_COULD_NOT_BE_CREATED)
+		return err
 	}
-	payload := bytes.NewReader(json)
 
 	// Create HTTP request
-	req, err := http.NewRequest(http.MethodPost, f.logsEndpoint, payload)
+	req, err := http.NewRequest(http.MethodPost, f.logsEndpoint, payloadZipped)
 	if err != nil {
 		return errors.New(LOGS__HTTP_REQUEST_COULD_NOT_BE_CREATED)
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Encoding", "gzip")
 	req.Header.Add("Api-Key", f.licenseKey)
 
 	// Perform HTTP request
@@ -133,4 +134,33 @@ func (f *forwarder) sendToNewRelic(
 	}
 
 	return nil
+}
+
+func (f *forwarder) createPayload(
+	nrLogs []logObject,
+) (
+	*bytes.Buffer,
+	error,
+) {
+	// Create payload
+	json, err := json.Marshal(nrLogs)
+	if err != nil {
+		return nil, errors.New(LOGS__PAYLOAD_COULD_NOT_BE_CREATED)
+	}
+
+	// Zip the payload
+
+	var payloadZipped bytes.Buffer
+	zw := gzip.NewWriter(&payloadZipped)
+	defer zw.Close()
+
+	if _, err = zw.Write(json); err != nil {
+		return nil, errors.New(LOGS__PAYLOAD_COULD_NOT_BE_ZIPPED)
+	}
+
+	if err = zw.Close(); err != nil {
+		return nil, errors.New(LOGS__PAYLOAD_COULD_NOT_BE_ZIPPED)
+	}
+
+	return &payloadZipped, nil
 }

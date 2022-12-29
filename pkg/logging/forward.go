@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,24 +64,19 @@ func (f *forwarder) Fire(e *logrus.Entry) error {
 }
 
 func (f *forwarder) flush() error {
-	bytes, err := f.formatLogsForNewRelic()
-	if err != nil {
-		return err
-	}
+	// Create New Relic logs
+	nrLogs := f.createNewRelicLogs()
 
-	fmt.Println(string(bytes))
-	return nil
+	// Flush data to New Relic
+	return f.sendToNewRelic(nrLogs)
 }
 
-func (f *forwarder) formatLogsForNewRelic() (
-	[]byte,
-	error,
-) {
+func (f *forwarder) createNewRelicLogs() []logObject {
 	lo := &logObject{
 		Common: &commonBlock{
 			Attributes: make(map[string]string),
 		},
-		Logs: make([]logBlock, len(f.logs)),
+		Logs: make([]logBlock, 0, len(f.logs)),
 	}
 
 	// Create common block
@@ -102,10 +98,39 @@ func (f *forwarder) formatLogsForNewRelic() (
 		lo.Logs = append(lo.Logs, logBlock)
 	}
 
-	bytes, err := json.Marshal([]logObject{*lo})
+	return []logObject{*lo}
+}
+
+func (f *forwarder) sendToNewRelic(
+	nrLogs []logObject,
+) error {
+
+	// Create payload
+	json, err := json.Marshal(nrLogs)
 	if err != nil {
-		return nil, errors.New(LOGS__PAYLOAD_COULD_NOT_BE_CREATED)
+		return errors.New(LOGS__PAYLOAD_COULD_NOT_BE_CREATED)
+	}
+	payload := bytes.NewReader(json)
+
+	// Create HTTP request
+	req, err := http.NewRequest(http.MethodPost, f.logsEndpoint, payload)
+	if err != nil {
+		return errors.New(LOGS__HTTP_REQUEST_COULD_NOT_BE_CREATED)
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Api-Key", f.licenseKey)
+
+	// Perform HTTP request
+	res, err := f.client.Do(req)
+	if err != nil {
+		return errors.New(LOGS__HTTP_REQUEST_HAS_FAILED)
+	}
+	defer res.Body.Close()
+
+	// Check if call was successful
+	if res.StatusCode != http.StatusAccepted {
+		return errors.New(LOGS__NEW_RELIC_RETURNED_NOT_OK_STATUS)
 	}
 
-	return bytes, nil
+	return nil
 }

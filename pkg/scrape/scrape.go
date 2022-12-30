@@ -8,7 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
-	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
+	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 // Object which is responsible for scraping
@@ -37,7 +37,7 @@ func NewScraper(
 
 	evs := config.NewEndpointValues()
 
-	cfg.Logger.Log(logrus.DebugLevel, "Config file is succesfully created.")
+	cfg.Logger.Log(logrus.DebugLevel, "Scraper is succesfully initialized.")
 
 	return &EndpointScraper{
 		config: cfg,

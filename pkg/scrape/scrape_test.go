@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/config"
-	logging "github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
+	"github.com/utr1903/newrelic-kubernetes-endpoint-scraper/pkg/logging"
 )
 
 func Test_EndpointReturnsNotOkResponse(t *testing.T) {

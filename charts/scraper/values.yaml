@@ -1,24 +1,5 @@
 # Default values for scraper.
 
-replicaCount: 1
-
-image:
-  # For AMD -> newrelic-kubernetes-endpoint-scraper-amd
-  # For ARM -> newrelic-kubernetes-endpoint-scraper-arm
-  repository: uturkarslan/newrelic-kubernetes-endpoint-scraper-amd
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.0.0"
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-restartPolicy: OnFailure
-
-# Create service account, role and role binding
-rbac: true
-
 serviceAccount:
   # Annotations to add to the service account
   annotations: {}
@@ -27,45 +8,35 @@ serviceAccount:
   name: ""
 
 cronjob:
+  # Number of succeeded jobs to keep
   successfulJobsHistoryLimit: 3
+  # Number of failed executed jobs to keep
   failedJobsHistoryLimit: 10
+  # How the job should be handled if it fails
+  restartPolicy: OnFailure
 
-podAnnotations: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-config:
+# Configuration for the scraper (main application)
+scraper:
+  image:
+    # For AMD -> newrelic-kubernetes-endpoint-scraper-amd
+    # For ARM -> newrelic-kubernetes-endpoint-scraper-arm
+    repository: uturkarslan/newrelic-kubernetes-endpoint-scraper-amd
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.1.0"
+  # Override name of the application
+  nameOverride: ""
+  # Override fullname of the application
+  fullnameOverride: ""
   # Mount path for the container
-  mountPath: /etc/config
+  mountPathConfig: /etc/config
   # Configuration data itself
-  data:
+  config:
     newrelic:
       # New Relic account ID
       accountId: ""
@@ -73,6 +44,8 @@ config:
       licenseKey: ""
       # Log level can be: DEBUG, ERROR
       logLevel: ERROR
+      # Flag to enable log forwarding to New Relic
+      logForwarding: true
     # Endpoints which are to be scraped
     # - type
     #   - kvp: key value pair

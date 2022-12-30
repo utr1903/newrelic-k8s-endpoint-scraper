@@ -17,28 +17,43 @@ following configuration options are provided within the
 **Example:**
 
 ```yaml
-config:
+# Configuration for the scraper (main application)
+scraper:
+  image:
+    # For AMD -> newrelic-kubernetes-endpoint-scraper-amd
+    # For ARM -> newrelic-kubernetes-endpoint-scraper-arm
+    repository: uturkarslan/newrelic-kubernetes-endpoint-scraper-amd
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.1.0"
+  # Override name of the application
+  nameOverride: ""
+  # Override fullname of the application
+  fullnameOverride: ""
   # Mount path for the container
-  mountPath: /etc/config
+  mountPathConfig: /etc/config
   # Configuration data itself
-  data:
+  config:
     newrelic:
       # New Relic account ID
-      accountId: "<YOUR_NEWRELIC_ACCOUNT_ID>"
+      accountId: ""
       # New Relic license key
-      licenseKey: "<YOUR_NEWRELIC_LICENSE_KEY>"
+      licenseKey: ""
       # Log level can be: DEBUG, ERROR
       logLevel: ERROR
+      # Flag to enable log forwarding to New Relic
+      logForwarding: true
     # Endpoints which are to be scraped
     # - type
     #   - kvp: key value pair
-    endpoints:
-      - type: "kvp"
-        name: "MyEndpoint1"
-        url: "http://<SERVICE>.<NAMESPACE>.svc.cluster.local:<PORT>/<ENDPOINT>"
-      - type: "kvp"
-        name: "MyEndpoint2"
-        url: "http://<IP_ADDRESS_OF_POD>:<PORT>/<ENDPOINT>"
+    #   - json: json
+    endpoints: []
+      # - type: "kvp"
+      #   name: "MyEndpoint1"
+      #   url: "http://<SERVICE>.<NAMESPACE>.svc.cluster.local:<PORT>/<ENDPOINT>"
+      # - type: "kvp"
+      #   name: "MyEndpoint2"
+      #   url: "http://<IP_ADDRESS_OF_POD>:<PORT>/<ENDPOINT>"
 ```
 
 ## Scraping

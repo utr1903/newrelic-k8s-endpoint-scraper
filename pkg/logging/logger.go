@@ -1,4 +1,4 @@
-package config
+package logging
 
 import (
 	"os"
@@ -25,13 +25,22 @@ const (
 
 	// forward
 	FORWARD__PAYLOAD_COULD_NOT_BE_CREATED      = "payload could not be created"
+	FORWARD__PAYLOAD_COULD_NOT_BE_ZIPPED       = "payload could not be zipped"
 	FORWARD__HTTP_REQUEST_COULD_NOT_BE_CREATED = "http request could not be created"
 	FORWARD__HTTP_REQUEST_HAS_FAILED           = "http request has failed"
 	FORWARD__NEW_RELIC_RETURNED_NOT_OK_STATUS  = "http request has returned not OK status"
+
+	// logs
+	LOGS__PAYLOAD_COULD_NOT_BE_CREATED      = "payload could not be created"
+	LOGS__PAYLOAD_COULD_NOT_BE_ZIPPED       = "payload could not be zipped"
+	LOGS__HTTP_REQUEST_COULD_NOT_BE_CREATED = "http request could not be created"
+	LOGS__HTTP_REQUEST_HAS_FAILED           = "http request has failed"
+	LOGS__NEW_RELIC_RETURNED_NOT_OK_STATUS  = "http request has returned not OK status"
 )
 
 type Logger struct {
-	log *logrus.Logger
+	log       *logrus.Logger
+	forwarder *forwarder
 }
 
 func NewLogger(
@@ -49,7 +58,33 @@ func NewLogger(
 	}
 
 	return &Logger{
-		log: l,
+		log:       l,
+		forwarder: nil,
+	}
+}
+
+func NewLoggerWithForwarder(
+	logLevel string,
+	licenseKey string,
+	logsEndpoint string,
+) *Logger {
+	l := logrus.New()
+	l.Out = os.Stdout
+	l.Formatter = &logrus.JSONFormatter{}
+
+	switch logLevel {
+	case "DEBUG":
+		l.Level = logrus.DebugLevel
+	default:
+		l.Level = logrus.ErrorLevel
+	}
+
+	f := newForwarder(logrus.AllLevels, licenseKey, logsEndpoint)
+	l.AddHook(f)
+
+	return &Logger{
+		log:       l,
+		forwarder: f,
 	}
 }
 
@@ -58,8 +93,11 @@ func (l *Logger) Log(
 	msg string,
 ) {
 
-	fields := logrus.Fields{
-		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
+	fields := logrus.Fields{}
+
+	// Put common attributes
+	for key, val := range getCommonAttributes() {
+		fields[key] = val
 	}
 
 	switch lvl {
@@ -76,10 +114,14 @@ func (l *Logger) LogWithFields(
 	attributes map[string]string,
 ) {
 
-	fields := logrus.Fields{
-		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
+	fields := logrus.Fields{}
+
+	// Put common attributes
+	for key, val := range getCommonAttributes() {
+		fields[key] = val
 	}
 
+	// Put specific attributes
 	for key, val := range attributes {
 		fields[key] = val
 	}
@@ -90,4 +132,29 @@ func (l *Logger) LogWithFields(
 	default:
 		l.log.WithFields(fields).Debug(msg)
 	}
+}
+
+func getCommonAttributes() map[string]string {
+	attrs := map[string]string{
+		"instrumentation.provider": "newrelic-kubernetes-endpoint-scraper",
+	}
+	// Node name
+	if val := os.Getenv("NODE_NAME"); val != "" {
+		attrs["nodeName"] = val
+	}
+
+	// Namespace name
+	if val := os.Getenv("NAMESPACE_NAME"); val != "" {
+		attrs["namespaceName"] = val
+	}
+
+	// Pod name
+	if val := os.Getenv("POD_NAME"); val != "" {
+		attrs["podName"] = val
+	}
+	return attrs
+}
+
+func (l *Logger) Flush() error {
+	return l.forwarder.flush()
 }

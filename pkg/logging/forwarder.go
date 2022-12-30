@@ -65,6 +65,11 @@ func (f *forwarder) Fire(e *logrus.Entry) error {
 }
 
 func (f *forwarder) flush() error {
+	// Return if there are no logs
+	if len(f.logs) == 0 {
+		return nil
+	}
+
 	// Create New Relic logs
 	nrLogs := f.createNewRelicLogs()
 
